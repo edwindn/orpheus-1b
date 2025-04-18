@@ -21,6 +21,7 @@ print(f"Using device: {device}")
 MAX_SEQ_LENGTH = 8192
 CPU_COUNT = os.cpu_count()
 TRAIN_BATCH_SIZE = 1
+PAD_TO_LENGTH = True
 
 hf_login(os.getenv("HF_TOKEN_AMUVARMA"))
 tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B")
@@ -82,16 +83,17 @@ def tokenize_map(entry):
 
 dataset = dataset.map(tokenize_map, batched=False, remove_columns=dataset.column_names, num_proc=CPU_COUNT)
 
-dataset = dataset.shuffle(seed=42)
-hf_login(os.getenv("HF_TOKEN_EDWIN"))
+if not PAD_TO_LENGTH:
+    dataset = dataset.shuffle(seed=42)
+    hf_login(os.getenv("HF_TOKEN_EDWIN"))
 
-dataset.push_to_hub(
-    "edwindn/emilia-snac-orpheus-1b-unpadded",
-    split="train",
-    private=True
-)
+    dataset.push_to_hub(
+        "edwindn/emilia-snac-orpheus-1b-unpadded",
+        split="train",
+        private=True
+    )
 
-quit()
+    quit()
 
 # SEQ_LEN chunking
 train_dataset = []
