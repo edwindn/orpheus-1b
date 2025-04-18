@@ -5,6 +5,9 @@ from trl import SFTTrainer
 from datasets import load_dataset, Dataset
 from huggingface_hub import login as hf_login, snapshot_download
 import wandb
+import dotenv
+
+dotenv.load_dotenv()
 
 """
 run on gpu
