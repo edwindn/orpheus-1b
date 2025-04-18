@@ -83,7 +83,6 @@ def tokenize_map(entry):
 dataset = dataset.map(tokenize_map, batched=False, remove_columns=dataset.column_names, num_proc=CPU_COUNT)
 
 dataset = dataset.shuffle(seed=42)
-dataset = dataset.batch(batch_size=1)
 hf_login(os.getenv("HF_TOKEN_EDWIN"))
 
 dataset.push_to_hub(
