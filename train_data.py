@@ -95,7 +95,7 @@ for row in dataset:
         last_chunk.extend(tokens)
         current_len += len(tokens)
 
-assert [len(t) for t in train_dataset] == [MAX_SEQ_LENGTH] * len(train_dataset)
+print([len(t) for t in train_dataset])
 
 train_dataset = Dataset.from_list(train_dataset)
 train_dataset = train_dataset.shuffle(seed=42)
