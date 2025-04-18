@@ -75,6 +75,9 @@ dataset_path = snapshot_download(
 
 dataset = load_dataset(dataset_path, split="train")
 
+# SAMPLE FOR TESTING
+dataset = dataset.select(range(100))
+
 # Format dataset for model input
 def format_dataset(example):
     return {
