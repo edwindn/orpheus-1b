@@ -87,6 +87,7 @@ for row in dataset:
     if current_len + len(tokens) == MAX_SEQ_LENGTH:
         train_dataset.append(last_chunk + tokens)
         current_len = 0
+        last_chunk = []
     elif current_len + len(tokens) > MAX_SEQ_LENGTH:
         train_dataset.append(last_chunk + tokens[:MAX_SEQ_LENGTH - current_len])
         last_chunk = tokens[MAX_SEQ_LENGTH - current_len:]
@@ -97,6 +98,7 @@ for row in dataset:
 
 print([len(t) for t in train_dataset])
 
+train_dataset = [{"tokens": t} for t in train_dataset]
 train_dataset = Dataset.from_list(train_dataset)
 train_dataset = train_dataset.shuffle(seed=42)
 train_dataset = train_dataset.batch(batch_size=1)
