@@ -84,6 +84,15 @@ dataset_path = snapshot_download(
 
 dataset = load_dataset(dataset_path, split="train")
 
+def preprocess_map(example):
+    return {
+        'input_ids': example['tokens'],
+        'attention_mask': [1] * len(example['tokens']),
+        'labels': example['tokens'].copy()
+    }
+
+dataset = dataset.map(preprocess_map, batched=False, num_proc=CPU_COUNT)
+
 # SAMPLE FOR TESTING
 dataset = dataset.select(range(100))
 
