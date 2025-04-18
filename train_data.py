@@ -63,7 +63,7 @@ def tokenize_map(entry):
     #text_tokens = tokenizer(text, return_tensors="pt").input_ids[0]
     text_tokens = tokenizer(text).input_ids
 
-    #start = torch.tensor([start_of_human]) # tokenizer already adds sot token
+    #start = torch.tensor([start_of_human]) # tokenizer already adds sot token
     #middle = torch.tensor([end_of_text, end_of_human, start_of_gpt, start_of_audio])
     #end = torch.tensor([end_of_audio, end_of_gpt])
     #tokens = torch.cat([start, text_tokens, middle, audio_tokens, end])
@@ -84,19 +84,27 @@ current_len = 0
 last_chunk = []
 for row in dataset:
     tokens = row['tokens']
-    if current_len + len(tokens) == MAX_SEQ_LENGTH:
-        train_dataset.append(last_chunk + tokens)
-        current_len = 0
+    
+    while current_len + len(tokens) > MAX_SEQ_LENGTH:
+        needed = MAX_SEQ_LENGTH - current_len
+        last_chunk.extend(tokens[:needed])
+        train_dataset.append(last_chunk)
+        
+        tokens = tokens[needed:]
         last_chunk = []
-    elif current_len + len(tokens) > MAX_SEQ_LENGTH:
-        train_dataset.append(last_chunk + tokens[:MAX_SEQ_LENGTH - current_len])
-        last_chunk = tokens[MAX_SEQ_LENGTH - current_len:]
         current_len = 0
-    else:
-        last_chunk.extend(tokens)
-        current_len += len(tokens)
+    
+    last_chunk.extend(tokens)
+    current_len += len(tokens)
+    
+    if current_len == MAX_SEQ_LENGTH:
+        train_dataset.append(last_chunk)
+        last_chunk = []
+        current_len = 0
 
-print([len(t) for t in train_dataset])
+# Verify all sequences are the correct length
+print("Sequence lengths:", [len(t) for t in train_dataset])
+assert all(len(t) == MAX_SEQ_LENGTH for t in train_dataset), f"Not all sequences are of length {MAX_SEQ_LENGTH}"
 
 train_dataset = [{"tokens": t} for t in train_dataset]
 train_dataset = Dataset.from_list(train_dataset)
