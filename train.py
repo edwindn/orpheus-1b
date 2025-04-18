@@ -82,6 +82,7 @@ dataset = load_dataset(dataset_path, split="train")
 dataset = dataset.select(range(100))
 
 print([len(x['tokens']) for x in dataset])
+print(dataset[0])
 
 # Format dataset for model input
 def format_dataset(example):
