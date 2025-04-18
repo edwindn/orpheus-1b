@@ -4,8 +4,14 @@ from datasets import load_dataset, Dataset
 from huggingface_hub import snapshot_download, login as hf_login
 import os
 import dotenv
+from tqdm import tqdm
 
 dotenv.load_dotenv()
+
+"""
+possible changes:
+add up to 2* len_snac for lower levels of tokens
+"""
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
@@ -79,7 +85,8 @@ train_dataset = []
 
 current_len = 0
 last_chunk = []
-for row in dataset:
+
+for row in tqdm(dataset):
     tokens = row['tokens']
     
     while current_len + len(tokens) > MAX_SEQ_LENGTH:
