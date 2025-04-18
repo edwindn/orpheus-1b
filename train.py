@@ -3,7 +3,11 @@ import os
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, SFTTrainer
 from datasets import load_dataset
 
-# accelerate launch train.py
+"""
+run on gpu
+
+accelerate launch train.py
+"""
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")

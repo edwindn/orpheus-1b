@@ -49,6 +49,7 @@ class OrpheusInference(nn.Module):
             attention_mask: Optional[torch.Tensor] = None
     ):
         out_tokens = self.model(input_ids, attention_mask).flatten()
+        assert len(out_tokens) % 7 == 0, "Token length must be divisible by 7"
         out_tokens = out_tokens - llama_token_end
         # extract between start_of_audio and end_of_audio tokens
 

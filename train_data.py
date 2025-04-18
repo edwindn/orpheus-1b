@@ -9,6 +9,8 @@ from tqdm import tqdm
 dotenv.load_dotenv()
 
 """
+run on cpu
+
 possible changes:
 add up to 2* len_snac for lower levels of tokens
 """
@@ -79,6 +81,18 @@ def tokenize_map(entry):
 
 
 dataset = dataset.map(tokenize_map, batched=False, remove_columns=dataset.column_names, num_proc=CPU_COUNT)
+
+dataset = dataset.shuffle(seed=42)
+dataset = dataset.batch(batch_size=1)
+hf_login(os.getenv("HF_TOKEN_EDWIN"))
+
+dataset.push_to_hub(
+    "edwindn/emilia-snac-orpheus-1b-unpadded",
+    split="train",
+    private=True
+)
+
+quit()
 
 # SEQ_LEN chunking
 train_dataset = []
