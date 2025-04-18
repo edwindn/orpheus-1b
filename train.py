@@ -87,16 +87,12 @@ dataset = load_dataset(dataset_path, split="train")
 # SAMPLE FOR TESTING
 dataset = dataset.select(range(100))
 
-print([len(x['tokens'][0]) for x in dataset])
+print([len(x['tokens']) for x in dataset])
 
 # Format dataset for model input
 def format_dataset(example):
-    tokens = example['tokens'][0]
-    
-    max_token = max(tokens)
-    if max_token >= model.config.vocab_size:
-        print(f"Warning: Token {max_token} exceeds model vocab size {model.config.vocab_size}")
-    
+    tokens = example['tokens']
+
     return {
         'input_ids': tokens,
         'attention_mask': [1] * len(tokens),
@@ -146,5 +142,5 @@ trainer = Trainer(
 trainer.train()
 
 # Push model to Hugging Face Hub
-trainer.push_to_hub("edwindn/orpheus-1b-0.1", private=True)
+trainer.push_to_hub("edwindn/orpheus-1b-0.1")
 
