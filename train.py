@@ -2,9 +2,9 @@ import torch
 import os
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
 from trl import SFTTrainer
-from datasets import load_dataset
+from datasets import load_dataset, Dataset
+from huggingface_hub import login as hf_login, snapshot_download
 import wandb
-from huggingface_hub import login as hf_login
 
 """
 run on gpu
@@ -60,7 +60,15 @@ audio_token_start = llama_token_end + 10
 
 # ---------------------- #
 
-dataset = load_dataset("edwindn/emilia-snac-orpheus-1b-unpadded", split="train")
+# Download dataset
+dataset_path = snapshot_download(
+    repo_id="edwindn/emilia-snac-orpheus-1b-unpadded",
+    repo_type="dataset",
+    revision="main",
+    max_workers=CPU_COUNT,
+)
+
+dataset = load_dataset(dataset_path, split="train")
 
 # Setup training arguments with DDP
 training_args = TrainingArguments(
