@@ -79,6 +79,8 @@ dataset = load_dataset(dataset_path, split="train")
 # SAMPLE FOR TESTING
 dataset = dataset.select(range(100))
 
+print([len(x['tokens']) for x in dataset])
+
 # Format dataset for model input
 def format_dataset(example):
     return {
