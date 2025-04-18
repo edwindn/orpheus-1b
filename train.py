@@ -91,7 +91,6 @@ def preprocess_map(example):
         'labels': example['tokens'].copy()
     }
 
-dataset = dataset.map(preprocess_map, batched=False, num_proc=CPU_COUNT)
 
 # SAMPLE FOR TESTING
 dataset = dataset.select(range(100))
@@ -99,6 +98,7 @@ dataset = dataset.select(range(100))
 
 
 
+dataset = dataset.map(preprocess_map, batched=False, num_proc=CPU_COUNT)
 
 print([len(x['tokens']) for x in dataset])
 
