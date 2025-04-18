@@ -85,10 +85,17 @@ dataset_path = snapshot_download(
 dataset = load_dataset(dataset_path, split="train")
 
 def preprocess_map(example):
+    tokens = example['tokens']
+    # Ensure all sequences are exactly MAX_SEQ_LENGTH
+    if len(tokens) > MAX_SEQ_LENGTH:
+        tokens = tokens[:MAX_SEQ_LENGTH]
+    elif len(tokens) < MAX_SEQ_LENGTH:
+        tokens = tokens + [tokenizer.pad_token_id] * (MAX_SEQ_LENGTH - len(tokens))
+    
     return {
-        'input_ids': example['tokens'],
-        'attention_mask': [1] * len(example['tokens']),
-        'labels': example['tokens'].copy()
+        'input_ids': tokens,
+        'attention_mask': [1] * len(tokens),
+        'labels': tokens.copy()
     }
 
 
