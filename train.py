@@ -60,7 +60,7 @@ audio_token_start = llama_token_end + 10
 
 # ---------------------- #
 
-dataset = load_dataset("edwindn/emilia-snac-orpheus-1b", split="train")
+dataset = load_dataset("edwindn/emilia-snac-orpheus-1b-unpadded", split="train")
 
 # Setup training arguments with DDP
 training_args = TrainingArguments(
