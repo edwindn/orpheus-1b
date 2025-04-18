@@ -102,6 +102,8 @@ def preprocess_map(example):
 
 
 dataset = dataset.map(preprocess_map, batched=False, num_proc=CPU_COUNT)
+dataset.push_to_hub("edwindn/emilia-snac-orpheus-1b-padded", split="train", private=True)
+quit()
 
 # Setup training arguments with DDP
 training_args = TrainingArguments(
