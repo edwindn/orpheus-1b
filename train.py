@@ -1,6 +1,7 @@
 import torch
 import os
-from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, SFTTrainer
+from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
+from trl import SFTTrainer
 from datasets import load_dataset
 import wandb
 
