@@ -76,7 +76,7 @@ model.config.vocab_size = new_vocab_size
 
 # Download dataset
 dataset_path = snapshot_download(
-    repo_id="edwindn/emilia-snac-orpheus-1b-test",
+    repo_id="edwindn/emilia-snac-orpheus-1b-unpadded",
     repo_type="dataset",
     revision="main",
     max_workers=CPU_COUNT,
