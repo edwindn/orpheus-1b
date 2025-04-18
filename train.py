@@ -105,7 +105,7 @@ dataset = dataset.map(preprocess_map, batched=False, num_proc=CPU_COUNT)
 
 # Setup training arguments with DDP
 training_args = TrainingArguments(
-    output_dir="checkpoints",
+    output_dir="orpheus-1b-0.1",
     per_device_train_batch_size=TRAIN_BATCH_SIZE,
     num_train_epochs=1,
     learning_rate=2e-5,
