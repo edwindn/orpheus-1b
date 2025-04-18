@@ -16,18 +16,21 @@ accelerate launch train.py
 
 hf_login(os.getenv("HF_TOKEN_EDWIN"))
 
-# Initialize wandb
-wandb.init(
-    project="orpheus-1b",
-    name="training-run",
-    config={
-        "model_name": "meta-llama/Llama-3.2-1B",
-        "max_seq_length": 8192,
-        "batch_size": 1,
-        "learning_rate": 2e-5,
-        "epochs": 1
-    }
-)
+USE_WANDB = False
+
+if USE_WANDB:
+    # Initialize wandb
+    wandb.init(
+        project="orpheus-1b",
+        name="training-run",
+        config={
+            "model_name": "meta-llama/Llama-3.2-1B",
+            "max_seq_length": 8192,
+            "batch_size": 1,
+            "learning_rate": 2e-5,
+            "epochs": 1
+        }
+    )
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
@@ -99,7 +102,7 @@ training_args = TrainingArguments(
     ddp_find_unused_parameters=False,
     ddp_timeout=1800,
     local_rank=int(os.environ.get("LOCAL_RANK", -1)),
-    report_to="wandb"
+    report_to="wandb" if USE_WANDB else None
 )
 
 # Create data collator
