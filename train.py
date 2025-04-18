@@ -12,6 +12,8 @@ dotenv.load_dotenv()
 run on gpu
 
 accelerate launch train.py
+
+move the map function to train_data.py
 """
 
 hf_login(os.getenv("HF_TOKEN_EDWIN"))
@@ -68,7 +70,7 @@ audio_token_start = llama_token_end + 10
 
 # Download dataset
 dataset_path = snapshot_download(
-    repo_id="edwindn/emilia-snac-orpheus-1b-unpadded",
+    repo_id="edwindn/emilia-snac-orpheus-1b-test",
     repo_type="dataset",
     revision="main",
     max_workers=CPU_COUNT,
