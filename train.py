@@ -99,7 +99,7 @@ def format_dataset(example):
         tokens = tokens[:MAX_SEQ_LENGTH]
     elif len(tokens) < MAX_SEQ_LENGTH:
         tokens = tokens + [tokenizer.pad_token_id] * (MAX_SEQ_LENGTH - len(tokens))
-    
+
     return {
         'input_ids': tokens,
         'attention_mask': [1] * len(tokens),

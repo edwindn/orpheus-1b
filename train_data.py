@@ -5,6 +5,7 @@ from huggingface_hub import snapshot_download, login as hf_login
 import os
 import dotenv
 from tqdm import tqdm
+import random
 
 dotenv.load_dotenv()
 
@@ -63,22 +64,20 @@ snapshot_download(
 dataset = load_dataset(repo_id, split="train")
 
 def tokenize_map(entry):
-    #audio_tokens = torch.tensor(entry['codes_list'], dtype=torch.long)
     audio_tokens = entry['codes_list']
     text = entry['text']
-    #text_tokens = tokenizer(text, return_tensors="pt").input_ids[0]
     text_tokens = tokenizer(text).input_ids
-
-    #start = torch.tensor([start_of_human]) # tokenizer already adds sot token
-    #middle = torch.tensor([end_of_text, end_of_human, start_of_gpt, start_of_audio])
-    #end = torch.tensor([end_of_audio, end_of_gpt])
-    #tokens = torch.cat([start, text_tokens, middle, audio_tokens, end])
 
     start = [start_of_human]
     middle = [end_of_text, end_of_human, start_of_gpt, start_of_audio]
     end = [end_of_audio, end_of_gpt]
     tokens = start + text_tokens + middle + audio_tokens + end
-    return {"tokens": tokens}
+    
+    return {
+        'input_ids': tokens,
+        'attention_mask': [1] * len(tokens),
+        'labels': tokens.copy()
+    }
 
 
 dataset = dataset.map(tokenize_map, batched=False, remove_columns=dataset.column_names, num_proc=CPU_COUNT)
@@ -107,24 +106,38 @@ for row in tqdm(dataset):
     while current_len + len(tokens) > MAX_SEQ_LENGTH:
         needed = MAX_SEQ_LENGTH - current_len
         last_chunk.extend(tokens[:needed])
-        train_dataset.append(last_chunk)
+        train_dataset.append(
+            {
+                'input_ids': last_chunk,
+                'attention_mask': [1] * len(last_chunk),
+                'labels': last_chunk.copy()
+            }
+        )
         
         tokens = tokens[needed:]
         last_chunk = []
         current_len = 0
+
+        if random.random() < 0.01:
+            print(f"Chunk {len(train_dataset)}: {len(last_chunk)}")
     
     last_chunk.extend(tokens)
     current_len += len(tokens)
     
     if current_len == MAX_SEQ_LENGTH:
-        train_dataset.append(last_chunk)
+        train_dataset.append(
+            {
+                'input_ids': last_chunk,
+                'attention_mask': [1] * len(last_chunk),
+                'labels': last_chunk.copy()
+            }
+        )
         last_chunk = []
         current_len = 0
 
 # Verify all sequences are the correct length
-assert all(len(t) == MAX_SEQ_LENGTH for t in train_dataset[:-1]), f"Not all sequences are of length {MAX_SEQ_LENGTH}"
+assert all(len(t['input_ids']) == MAX_SEQ_LENGTH for t in train_dataset), f"Not all sequences are of length {MAX_SEQ_LENGTH}"
 
-train_dataset = [{"tokens": t} for t in train_dataset]
 train_dataset = Dataset.from_list(train_dataset)
 train_dataset = train_dataset.shuffle(seed=42)
 train_dataset = train_dataset.batch(batch_size=1)
