@@ -1,8 +1,11 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
 import torch
 from datasets import load_dataset, Dataset
-from huggingface_hub import snapshot_download, login
+from huggingface_hub import snapshot_download, login as hf_login
 import os
+import dotenv
+
+dotenv.load_dotenv()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
@@ -11,6 +14,7 @@ MAX_SEQ_LENGTH = 8192
 CPU_COUNT = os.cpu_count()
 TRAIN_BATCH_SIZE = 1
 
+hf_login(os.getenv("HF_TOKEN_AMUVARMA"))
 tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B")
 
 # ---------------------- #
@@ -77,7 +81,7 @@ dataset = dataset.map(tokenize_map, batched=False, remove_columns=dataset.column
 train_dataset = []
 
 current_len = 0
-last_chunk = None
+last_chunk = []
 for row in dataset:
     tokens = row['tokens']
     if current_len + len(tokens) == MAX_SEQ_LENGTH:
@@ -97,7 +101,7 @@ train_dataset = Dataset.from_list(train_dataset)
 train_dataset = train_dataset.shuffle(seed=42)
 train_dataset = train_dataset.batch(batch_size=1)
 
-#login(os.getenv("HF_TOKEN"))
+hf_login(os.getenv("HF_TOKEN_EDWIN"))
 
 # Push dataset to Hugging Face Hub
 train_dataset.push_to_hub(
