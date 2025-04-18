@@ -1,6 +1,6 @@
 import torch
 import os
-from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer
+from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer, DataCollatorForLanguageModeling
 from datasets import load_dataset, Dataset
 from huggingface_hub import login as hf_login, snapshot_download
 import wandb
@@ -72,6 +72,16 @@ dataset_path = snapshot_download(
 
 dataset = load_dataset(dataset_path, split="train")
 
+# Format dataset for model input
+def format_dataset(example):
+    return {
+        'input_ids': example['tokens'],
+        'attention_mask': [1] * len(example['tokens']),
+        'labels': example['tokens']
+    }
+
+dataset = dataset.map(format_dataset)
+
 # Setup training arguments with DDP
 training_args = TrainingArguments(
     output_dir="checkpoints",
@@ -92,11 +102,18 @@ training_args = TrainingArguments(
     report_to="wandb"
 )
 
+# Create data collator
+data_collator = DataCollatorForLanguageModeling(
+    tokenizer=tokenizer,
+    mlm=False
+)
+
 trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=dataset,
-    tokenizer=tokenizer
+    tokenizer=tokenizer,
+    data_collator=data_collator
 )
 
 # Train
