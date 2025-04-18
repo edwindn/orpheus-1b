@@ -66,7 +66,13 @@ pad_token = llama_token_end + 7
 
 audio_token_start = llama_token_end + 10
 
+new_vocab_size = audio_token_start + 7 * snac_vocab_size
+
 # ---------------------- #
+
+# Resize token embeddings
+model.resize_token_embeddings(new_vocab_size)
+model.config.vocab_size = new_vocab_size
 
 # Download dataset
 dataset_path = snapshot_download(
