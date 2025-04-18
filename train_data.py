@@ -68,7 +68,7 @@ def tokenize_map(entry):
     text = entry['text']
     text_tokens = tokenizer(text).input_ids
 
-    start = [start_of_human]
+    start = [start_of_human] if text_tokens[0] == start_of_text else [start_of_human, start_of_text]
     middle = [end_of_text, end_of_human, start_of_gpt, start_of_audio]
     end = [end_of_audio, end_of_gpt]
     tokens = start + text_tokens + middle + audio_tokens + end
@@ -93,6 +93,8 @@ if not PAD_TO_LENGTH:
     )
 
     quit()
+
+    
 
 # SEQ_LEN chunking
 train_dataset = []

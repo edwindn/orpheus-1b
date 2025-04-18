@@ -87,29 +87,11 @@ dataset = load_dataset(dataset_path, split="train")
 # SAMPLE FOR TESTING
 dataset = dataset.select(range(100))
 
+
+
+
+
 print([len(x['tokens']) for x in dataset])
-
-# Format dataset for model input
-def format_dataset(example):
-    tokens = example['tokens']
-
-    # Ensure all sequences are exactly MAX_SEQ_LENGTH
-    # NOTE WILL NOT NEED WHEN USING PADDED DATASET
-    if len(tokens) > MAX_SEQ_LENGTH:
-        tokens = tokens[:MAX_SEQ_LENGTH]
-    elif len(tokens) < MAX_SEQ_LENGTH:
-        tokens = tokens + [tokenizer.pad_token_id] * (MAX_SEQ_LENGTH - len(tokens))
-
-    return {
-        'input_ids': tokens,
-        'attention_mask': [1] * len(tokens),
-        'labels': tokens.copy()
-    }
-
-print(f"Model vocab size: {model.config.vocab_size}")
-
-
-dataset = dataset.map(format_dataset)
 
 # Setup training arguments with DDP
 training_args = TrainingArguments(
@@ -131,19 +113,12 @@ training_args = TrainingArguments(
     report_to="wandb" if USE_WANDB else None
 )
 
-# Create data collator with padding
-data_collator = DataCollatorForLanguageModeling(
-    tokenizer=tokenizer,
-    mlm=False,
-    pad_to_multiple_of=MAX_SEQ_LENGTH
-)
-
 trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=dataset,
     tokenizer=tokenizer,
-    data_collator=data_collator
+    #data_collator=data_collator
 )
 
 # Train
