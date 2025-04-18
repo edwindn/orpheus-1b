@@ -89,25 +89,19 @@ def preprocess_map(example):
     # Ensure all sequences are exactly MAX_SEQ_LENGTH
     if len(tokens) > MAX_SEQ_LENGTH:
         tokens = tokens[:MAX_SEQ_LENGTH]
+        attention_mask = [1] * MAX_SEQ_LENGTH
     elif len(tokens) < MAX_SEQ_LENGTH:
+        attention_mask = [1] * len(tokens) + [0] * (MAX_SEQ_LENGTH - len(tokens))
         tokens = tokens + [tokenizer.pad_token_id] * (MAX_SEQ_LENGTH - len(tokens))
-    
+
     return {
         'input_ids': tokens,
-        'attention_mask': [1] * len(tokens),
+        'attention_mask': attention_mask,
         'labels': tokens.copy()
     }
 
 
-# SAMPLE FOR TESTING
-dataset = dataset.select(range(100))
-
-
-
-
 dataset = dataset.map(preprocess_map, batched=False, num_proc=CPU_COUNT)
-
-print([len(x['tokens']) for x in dataset])
 
 # Setup training arguments with DDP
 training_args = TrainingArguments(
@@ -129,17 +123,22 @@ training_args = TrainingArguments(
     report_to="wandb" if USE_WANDB else None
 )
 
+# data collator
+data_collator = DataCollatorForLanguageModeling(
+    tokenizer=tokenizer,
+    mlm=False,
+    pad_to_multiple_of=MAX_SEQ_LENGTH
+)
+
 trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=dataset,
     tokenizer=tokenizer,
-    #data_collator=data_collator
+    data_collator=data_collator
 )
 
-# Train
 trainer.train()
 
-# Push model to Hugging Face Hub
 trainer.push_to_hub("edwindn/orpheus-1b-0.1")
 
