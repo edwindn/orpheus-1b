@@ -93,6 +93,13 @@ print([len(x['tokens']) for x in dataset])
 def format_dataset(example):
     tokens = example['tokens']
 
+    # Ensure all sequences are exactly MAX_SEQ_LENGTH
+    # NOTE WILL NOT NEED WHEN USING PADDED DATASET
+    if len(tokens) > MAX_SEQ_LENGTH:
+        tokens = tokens[:MAX_SEQ_LENGTH]
+    elif len(tokens) < MAX_SEQ_LENGTH:
+        tokens = tokens + [tokenizer.pad_token_id] * (MAX_SEQ_LENGTH - len(tokens))
+    
     return {
         'input_ids': tokens,
         'attention_mask': [1] * len(tokens),
@@ -124,10 +131,11 @@ training_args = TrainingArguments(
     report_to="wandb" if USE_WANDB else None
 )
 
-# Create data collator
+# Create data collator with padding
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
-    mlm=False
+    mlm=False,
+    pad_to_multiple_of=MAX_SEQ_LENGTH
 )
 
 trainer = Trainer(
