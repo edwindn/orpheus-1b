@@ -81,18 +81,21 @@ dataset = load_dataset(dataset_path, split="train")
 # SAMPLE FOR TESTING
 dataset = dataset.select(range(100))
 
-print([len(x['tokens']) for x in dataset])
-print(dataset[0])
+print([len(x['tokens'][0]) for x in dataset])
 
 # Format dataset for model input
 def format_dataset(example):
+    tokens = example['tokens'][0] # NOTE REMOVE FOR FULL DATASET
     return {
-        'input_ids': example['tokens'],
-        'attention_mask': [1] * len(example['tokens']),
-        'labels': example['tokens']
+        'input_ids': tokens,
+        'attention_mask': [1] * len(tokens),
+        'labels': tokens.copy()
     }
 
+# Verify the data structure
+print("Sample data structure:", dataset[0])
 dataset = dataset.map(format_dataset)
+print("Formatted data structure:", dataset[0])
 
 # Setup training arguments with DDP
 training_args = TrainingArguments(
