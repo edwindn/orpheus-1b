@@ -1,7 +1,6 @@
 import torch
 import os
-from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
-from trl import SFTTrainer
+from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer
 from datasets import load_dataset, Dataset
 from huggingface_hub import login as hf_login, snapshot_download
 import wandb
@@ -75,7 +74,7 @@ dataset = load_dataset(dataset_path, split="train")
 
 # Setup training arguments with DDP
 training_args = TrainingArguments(
-    output_dir="checkpoints",  # Directory for checkpoints
+    output_dir="checkpoints",
     per_device_train_batch_size=TRAIN_BATCH_SIZE,
     num_train_epochs=1,
     learning_rate=2e-5,
@@ -84,25 +83,20 @@ training_args = TrainingArguments(
     gradient_checkpointing=True,
     fp16=True,
     logging_steps=10,
-    save_steps=100,  # Save a checkpoint every 100 steps
-    save_total_limit=3,  # Keep only the last 3 checkpoints
+    save_steps=100,
+    save_total_limit=3,
     eval_steps=100,
-    # DDP specific settings
     ddp_find_unused_parameters=False,
-    ddp_timeout=1800,  # 30 minutes
+    ddp_timeout=1800,
     local_rank=int(os.environ.get("LOCAL_RANK", -1)),
-    report_to="wandb"  # Add wandb reporting
+    report_to="wandb"
 )
 
-trainer = SFTTrainer(
+trainer = Trainer(
     model=model,
-    tokenizer=tokenizer,
-    train_dataset=dataset,
-    dataset_text_field="tokens",
-    dataset_num_proc=4,
-    packing=True,
-    max_seq_length=MAX_SEQ_LENGTH,
     args=training_args,
+    train_dataset=dataset,
+    tokenizer=tokenizer
 )
 
 # Train
