@@ -3,9 +3,6 @@ import torch
 from datasets import load_dataset, Dataset
 from huggingface_hub import snapshot_download, login
 import os
-import dotenv
-
-dotenv.load_dotenv()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
@@ -100,8 +97,7 @@ train_dataset = Dataset.from_list(train_dataset)
 train_dataset = train_dataset.shuffle(seed=42)
 train_dataset = train_dataset.batch(batch_size=1)
 
-# Login to Hugging Face Hub
-login(os.getenv("HF_TOKEN"))
+#login(os.getenv("HF_TOKEN"))
 
 # Push dataset to Hugging Face Hub
 train_dataset.push_to_hub(
