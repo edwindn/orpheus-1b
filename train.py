@@ -4,12 +4,15 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
 from trl import SFTTrainer
 from datasets import load_dataset
 import wandb
+from huggingface_hub import login as hf_login
 
 """
 run on gpu
 
 accelerate launch train.py
 """
+
+hf_login(os.getenv("HF_TOKEN_EDWIN"))
 
 # Initialize wandb
 wandb.init(
