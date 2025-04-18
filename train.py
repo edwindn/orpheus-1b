@@ -85,17 +85,22 @@ print([len(x['tokens'][0]) for x in dataset])
 
 # Format dataset for model input
 def format_dataset(example):
-    tokens = example['tokens'][0] # NOTE REMOVE FOR FULL DATASET
+    tokens = example['tokens'][0]
+    
+    max_token = max(tokens)
+    if max_token >= model.config.vocab_size:
+        print(f"Warning: Token {max_token} exceeds model vocab size {model.config.vocab_size}")
+    
     return {
         'input_ids': tokens,
         'attention_mask': [1] * len(tokens),
         'labels': tokens.copy()
     }
 
-# Verify the data structure
-print("Sample data structure:", dataset[0])
+print(f"Model vocab size: {model.config.vocab_size}")
+
+
 dataset = dataset.map(format_dataset)
-print("Formatted data structure:", dataset[0])
 
 # Setup training arguments with DDP
 training_args = TrainingArguments(
