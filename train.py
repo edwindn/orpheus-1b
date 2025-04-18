@@ -42,6 +42,7 @@ TRAIN_BATCH_SIZE = 1
 # ---------------------- #
 
 tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B")
+tokenizer.pad_token = tokenizer.eos_token  # Set pad token to EOS token
 model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.2-1B")
 model = model.to(device)  # Move model to device
 
