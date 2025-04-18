@@ -86,7 +86,6 @@ training_args = TrainingArguments(
     logging_steps=10,
     save_steps=100,  # Save a checkpoint every 100 steps
     save_total_limit=3,  # Keep only the last 3 checkpoints
-    evaluation_strategy="steps",
     eval_steps=100,
     # DDP specific settings
     ddp_find_unused_parameters=False,
