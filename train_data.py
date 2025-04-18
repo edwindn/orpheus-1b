@@ -53,7 +53,7 @@ snapshot_download(
 
 dataset = load_dataset(repo_id, split="train")
 
-dataset = dataset.select(range(100))
+dataset = dataset.select(range(10000))
 
 
 def tokenize_map(entry):
