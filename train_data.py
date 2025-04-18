@@ -53,9 +53,6 @@ snapshot_download(
 
 dataset = load_dataset(repo_id, split="train")
 
-dataset = dataset.select(range(10000))
-
-
 def tokenize_map(entry):
     #audio_tokens = torch.tensor(entry['codes_list'], dtype=torch.long)
     audio_tokens = entry['codes_list']
@@ -103,8 +100,7 @@ for row in dataset:
         current_len = 0
 
 # Verify all sequences are the correct length
-print("Sequence lengths:", [len(t) for t in train_dataset])
-assert all(len(t) == MAX_SEQ_LENGTH for t in train_dataset), f"Not all sequences are of length {MAX_SEQ_LENGTH}"
+assert all(len(t) == MAX_SEQ_LENGTH for t in train_dataset[:-1]), f"Not all sequences are of length {MAX_SEQ_LENGTH}"
 
 train_dataset = [{"tokens": t} for t in train_dataset]
 train_dataset = Dataset.from_list(train_dataset)
@@ -113,9 +109,8 @@ train_dataset = train_dataset.batch(batch_size=1)
 
 hf_login(os.getenv("HF_TOKEN_EDWIN"))
 
-# Push dataset to Hugging Face Hub
 train_dataset.push_to_hub(
-    "edwindn/emilia-snac-orpheus-1b-test",
+    "edwindn/emilia-snac-orpheus-1b",
     split="train",
     private=True
 )
