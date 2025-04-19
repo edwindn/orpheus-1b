@@ -82,7 +82,7 @@ def tokenize_map(entry):
         'labels': tokens.copy()
     }
 
-#dataset = dataset.select(range(100))
+dataset = dataset.select(range(100000))
 
 dataset = dataset.map(tokenize_map, batched=False, remove_columns=dataset.column_names, num_proc=CPU_COUNT)
 
