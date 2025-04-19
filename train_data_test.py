@@ -148,7 +148,7 @@ train_dataset = train_dataset.batch(batch_size=1)
 hf_login(os.getenv("HF_TOKEN_EDWIN"))
 
 train_dataset.push_to_hub(
-    "edwindn/emilia-snac-orpheus-1b-test",
+    "edwindn/emilia-snac-orpheus-1b-test2",
     split="train",
     private=False
 )

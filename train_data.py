@@ -154,7 +154,6 @@ for result in results:
 
 train_dataset = Dataset.from_list(train_dataset)
 train_dataset = train_dataset.shuffle(seed=42)
-train_dataset = train_dataset.batch(batch_size=1)
 
 hf_login(os.getenv("HF_TOKEN_EDWIN"))
 
