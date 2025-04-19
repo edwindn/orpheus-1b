@@ -8,6 +8,7 @@ import dotenv
 
 """
 run on cpu
+
 """
 
 dotenv.load_dotenv()

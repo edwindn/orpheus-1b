@@ -118,7 +118,7 @@ def process_chunk(dataset_chunk, dcix):
             )
 
             if random.random() < 0.0001:
-                print(f"Chunk {len(train_dataset_chunk)}: {len(last_chunk)}")
+                print(f"Chunk {len(train_dataset_chunk)} for dataset chunk {dcix}: {len(last_chunk)}")
             
             tokens = tokens[needed:]
             last_chunk = []
@@ -161,5 +161,5 @@ hf_login(os.getenv("HF_TOKEN_EDWIN"))
 train_dataset.push_to_hub(
     "edwindn/emilia-snac-orpheus-1b",
     split="train",
-    private=True
+    private=False
 )
