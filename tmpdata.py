@@ -8,33 +8,7 @@ import dotenv
 
 dotenv.load_dotenv()
 
-"""
-run on gpu
-
-accelerate launch train.py
-
-move the map function to train_data.py
-"""
-
 hf_login(os.getenv("HF_TOKEN_EDWIN"))
-
-USE_WANDB = True
-
-if USE_WANDB:
-    # Login to wandb
-    wandb.login(key=os.getenv("WANDB_API_KEY"))
-    # Initialize wandb
-    wandb.init(
-        project="orpheus-1b",
-        name="training-run",
-        config={
-            "model_name": "meta-llama/Llama-3.2-1B",
-            "max_seq_length": 8192,
-            "batch_size": 1,
-            "learning_rate": 2e-5,
-            "epochs": 1
-        }
-    )
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
@@ -95,44 +69,15 @@ def preprocess_map(example):
     }
 
 
-# SAMPLE
-
-
-
-
-
-# Sample first 100 rows
-dataset = dataset.select(range(100))
 dataset = dataset.map(preprocess_map, batched=False, num_proc=CPU_COUNT, remove_columns=["tokens"])
 
-# Setup training arguments with DDP
-training_args = TrainingArguments(
-    output_dir="orpheus-1b-0.1",
-    per_device_train_batch_size=1,  # Force batch size 1
-    num_train_epochs=1,
-    learning_rate=2e-5,
-    weight_decay=0.01,
-    gradient_accumulation_steps=4,
-    gradient_checkpointing=True,
-    fp16=True,
-    logging_steps=10,
-    save_steps=100,
-    save_total_limit=3,
-    eval_steps=100,
-    ddp_find_unused_parameters=False,
-    ddp_timeout=1800,
-    local_rank=int(os.environ.get("LOCAL_RANK", -1)),
-    report_to="wandb" if USE_WANDB else None
+train_dataset = dataset.shuffle(seed=42)
+train_dataset = train_dataset.batch(batch_size=1)
+
+hf_login(os.getenv("HF_TOKEN_EDWIN"))
+
+train_dataset.push_to_hub(
+    "edwindn/emilia-snac-orpheus-1b",
+    split="train",
+    private=True
 )
-
-trainer = Trainer(
-    model=model,
-    args=training_args,
-    train_dataset=dataset,
-    tokenizer=tokenizer
-)
-
-trainer.train()
-
-trainer.push_to_hub("edwindn/orpheus-1b-0.1-test")
-
