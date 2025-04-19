@@ -83,9 +83,8 @@ def tokenize_map(entry):
         'labels': tokens.copy()
     }
 
-dataset = dataset.map(tokenize_map, batched=False, remove_columns=dataset.column_names, num_proc=CPU_COUNT)
-
 if not PAD_TO_LENGTH:
+    dataset = dataset.map(tokenize_map, batched=False, remove_columns=dataset.column_names, num_proc=CPU_COUNT)
     dataset = dataset.shuffle(seed=42)
     hf_login(os.getenv("HF_TOKEN_EDWIN"))
 
@@ -150,6 +149,7 @@ chunk_size = len(dataset) // NUM_DS_SHARDS
 dataset_chunks = [dataset.shard(num_shards=NUM_DS_SHARDS, index=i) for i in range(NUM_DS_SHARDS)]
 
 for idx, ds in enumerate(dataset_chunks):
+    ds = ds.map(tokenize_map, batched=False, remove_columns=ds.column_names, num_proc=CPU_COUNT)
     ds_chunks = [ds.shard(num_shards=NUM_CHUNKS, index=i) for i in range(NUM_CHUNKS)]
 
     # Process chunks in parallel
@@ -179,6 +179,14 @@ for idx, ds in enumerate(dataset_chunks):
     )
 
     print(f"----- Pushed dataset {idx} to hub -----")
+
+    # delete the item to free memory
+    del ds
+    del ds_chunks
+    del train_dataset
+    del results
+    del process_chunk_with_index
+    del pool
 
 # Combine all chunks into final dataset
 # train_dataset = concatenate_datasets(final_dataset_chunks)
