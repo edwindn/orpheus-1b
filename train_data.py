@@ -140,13 +140,15 @@ def process_chunk(dataset_chunk, dcix):
     assert all(len(t['input_ids']) == MAX_SEQ_LENGTH for t in train_dataset_chunk[:-1]), f"Not all sequences are of length {MAX_SEQ_LENGTH} in chunk {dcix}"
     return train_dataset_chunk
 
+hf_login(os.getenv("HF_TOKEN_EDWIN"))
+
 # Process the dataset in 10 sequential chunks
 chunk_size = len(dataset) // 10
-final_dataset_chunks = []
+# final_dataset_chunks = []
 
 dataset_chunks = [dataset.shard(num_shards=10, index=i) for i in range(10)]
 
-for ds in dataset_chunks:
+for idx, ds in enumerate(dataset_chunks):
     ds_chunks = [ds.shard(num_shards=NUM_CHUNKS, index=i) for i in range(NUM_CHUNKS)]
 
     # Process chunks in parallel
@@ -169,19 +171,17 @@ for ds in dataset_chunks:
 
     train_dataset = Dataset.from_list(train_dataset)
     train_dataset = train_dataset.shuffle(seed=42)
-    final_dataset_chunks.append(train_dataset)
 
-    print(f"Finished dataset portion {len(final_dataset_chunks)}")
+    train_dataset.push_to_hub(
+        f"edwindn/emilia-snac-orpheus-1b-{idx}",
+        split="train",
+        private=True
+    )
+
+    print(f"----- Pushed dataset {idx} to hub -----")
 
 # Combine all chunks into final dataset
-train_dataset = concatenate_datasets(final_dataset_chunks)
-print(f"Final dataset size: {len(train_dataset)}")
+# train_dataset = concatenate_datasets(final_dataset_chunks)
+# print(f"Final dataset size: {len(train_dataset)}")
 
 
-hf_login(os.getenv("HF_TOKEN_EDWIN"))
-
-train_dataset.push_to_hub(
-    "edwindn/emilia-snac-orpheus-1b",
-    split="train",
-    private=True
-)
