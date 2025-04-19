@@ -93,7 +93,7 @@ def preprocess_map(example):
     }
 
 
-dataset = dataset.map(preprocess_map, batched=False, num_proc=CPU_COUNT)
+dataset = dataset.map(preprocess_map, batched=False, num_proc=CPU_COUNT, remove_columns=["tokens"])
 
 # Setup training arguments with DDP
 training_args = TrainingArguments(
