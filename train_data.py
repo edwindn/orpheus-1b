@@ -22,7 +22,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 MAX_SEQ_LENGTH = 8192
-CPU_COUNT = os.cpu_count()
+CPU_COUNT = min(os.cpu_count(), 100)
 TRAIN_BATCH_SIZE = 1
 PAD_TO_LENGTH = True
 NUM_CHUNKS = 200
@@ -82,7 +82,7 @@ def tokenize_map(entry):
         'labels': tokens.copy()
     }
 
-dataset = dataset.select(range(len(dataset)//100))
+dataset = dataset.select(range(len(dataset)//10))
 
 dataset = dataset.map(tokenize_map, batched=False, remove_columns=dataset.column_names, num_proc=CPU_COUNT)
 
