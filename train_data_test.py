@@ -25,7 +25,7 @@ MAX_SEQ_LENGTH = 8192
 CPU_COUNT = os.cpu_count()
 TRAIN_BATCH_SIZE = 1
 PAD_TO_LENGTH = True
-NUM_CHUNKS = 50
+NUM_CHUNKS = 1000
 
 hf_login(os.getenv("HF_TOKEN_AMUVARMA"))
 tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B")
@@ -148,7 +148,7 @@ train_dataset = train_dataset.batch(batch_size=1)
 hf_login(os.getenv("HF_TOKEN_EDWIN"))
 
 train_dataset.push_to_hub(
-    "edwindn/emilia-snac-orpheus-1b-test2",
+    "edwindn/emilia-snac-orpheus-1b-2",
     split="train",
     private=False
 )
