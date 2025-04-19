@@ -82,7 +82,7 @@ def tokenize_map(entry):
         'labels': tokens.copy()
     }
 
-dataset = dataset.select(range(len(dataset)//10))
+dataset = dataset.select(range(len(dataset)//100))
 
 dataset = dataset.map(tokenize_map, batched=False, remove_columns=dataset.column_names, num_proc=CPU_COUNT)
 
@@ -146,6 +146,7 @@ def process_chunk(dataset_chunk, dcix):
 dataset_chunks = [dataset.shard(num_shards=NUM_CHUNKS, index=i) for i in range(NUM_CHUNKS)]
 
 # Process chunks in parallel
+print(f"Processing {NUM_CHUNKS} chunks in parallel")
 pool = mp.Pool(processes=NUM_CHUNKS)
 try:
     process_chunk_with_index = partial(process_chunk)
@@ -153,11 +154,14 @@ try:
 finally:
     pool.close()
     pool.join()
+print(f"Finished processing {NUM_CHUNKS} chunks")
 
 # Combine results
 train_dataset = []
 for result in results:
     train_dataset.extend(result)
+
+print("Combined chunks")
 
 train_dataset = Dataset.from_list(train_dataset)
 train_dataset = train_dataset.shuffle(seed=42)
@@ -167,5 +171,5 @@ hf_login(os.getenv("HF_TOKEN_EDWIN"))
 train_dataset.push_to_hub(
     "edwindn/emilia-snac-orpheus-1b",
     split="train",
-    private=False
+    private=True
 )
