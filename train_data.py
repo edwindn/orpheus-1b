@@ -115,13 +115,13 @@ for row in tqdm(dataset):
                 'labels': last_chunk.copy()
             }
         )
+
+        if random.random() < 0.0001:
+            print(f"Chunk {len(train_dataset)}: {len(last_chunk)}")
         
         tokens = tokens[needed:]
         last_chunk = []
         current_len = 0
-
-        if random.random() < 0.01:
-            print(f"Chunk {len(train_dataset)}: {len(last_chunk)}")
     
     last_chunk.extend(tokens)
     current_len += len(tokens)
