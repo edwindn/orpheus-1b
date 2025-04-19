@@ -26,6 +26,7 @@ CPU_COUNT = min(os.cpu_count(), 100)
 TRAIN_BATCH_SIZE = 1
 PAD_TO_LENGTH = True
 NUM_CHUNKS = 200
+NUM_DS_SHARDS = 10
 
 hf_login(os.getenv("HF_TOKEN_AMUVARMA"))
 tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B")
@@ -143,20 +144,19 @@ def process_chunk(dataset_chunk, dcix):
 hf_login(os.getenv("HF_TOKEN_EDWIN"))
 
 # Process the dataset in 10 sequential chunks
-chunk_size = len(dataset) // 10
+chunk_size = len(dataset) // NUM_DS_SHARDS
 # final_dataset_chunks = []
 
-dataset_chunks = [dataset.shard(num_shards=10, index=i) for i in range(10)]
+dataset_chunks = [dataset.shard(num_shards=NUM_DS_SHARDS, index=i) for i in range(NUM_DS_SHARDS)]
 
 for idx, ds in enumerate(dataset_chunks):
     ds_chunks = [ds.shard(num_shards=NUM_CHUNKS, index=i) for i in range(NUM_CHUNKS)]
 
     # Process chunks in parallel
-    print(f"Processing {NUM_CHUNKS} chunks in parallel")
     pool = mp.Pool(processes=NUM_CHUNKS)
     try:
         process_chunk_with_index = partial(process_chunk)
-        results = pool.starmap(process_chunk_with_index, [(chunk, i) for i, chunk in enumerate(dataset_chunks)])
+        results = pool.starmap(process_chunk_with_index, [(chunk, i) for i, chunk in enumerate(ds_chunks)])
     finally:
         pool.close()
         pool.join()
