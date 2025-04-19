@@ -19,8 +19,9 @@ move the map function to train_data.py
 hf_login(os.getenv("HF_TOKEN_EDWIN"))
 
 USE_WANDB = True
+local_rank = int(os.environ.get("LOCAL_RANK", -1))
 
-if USE_WANDB:
+if USE_WANDB and local_rank in [-1, 0]:  # Only initialize on master GPU
     # Login to wandb
     wandb.login(key=os.getenv("WANDB_API_KEY"))
     # Initialize wandb
@@ -86,29 +87,11 @@ dataset_path = snapshot_download(
 
 dataset = load_dataset(dataset_path, split="train")
 
-def preprocess_map(example):
-    tokens = example['tokens']
-    return {
-        'input_ids': tokens,
-        'attention_mask': [1] * len(tokens),
-        'labels': tokens.copy()
-    }
-
-
-# SAMPLE
-
-
-
-
-
-# Sample first 100 rows
-dataset = dataset.select(range(100))
-dataset = dataset.map(preprocess_map, batched=False, num_proc=CPU_COUNT, remove_columns=["tokens"])
 
 # Setup training arguments with DDP
 training_args = TrainingArguments(
     output_dir="orpheus-1b-0.1",
-    per_device_train_batch_size=1,  # Force batch size 1
+    per_device_train_batch_size=1,
     num_train_epochs=1,
     learning_rate=2e-5,
     weight_decay=0.01,
@@ -121,8 +104,8 @@ training_args = TrainingArguments(
     eval_steps=100,
     ddp_find_unused_parameters=False,
     ddp_timeout=1800,
-    local_rank=int(os.environ.get("LOCAL_RANK", -1)),
-    report_to="wandb" if USE_WANDB else None
+    local_rank=local_rank,
+    report_to="wandb" if (USE_WANDB and local_rank in [-1, 0]) else None
 )
 
 trainer = Trainer(

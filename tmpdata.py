@@ -72,12 +72,11 @@ def preprocess_map(example):
 dataset = dataset.map(preprocess_map, batched=False, num_proc=CPU_COUNT, remove_columns=["tokens"])
 
 train_dataset = dataset.shuffle(seed=42)
-train_dataset = train_dataset.batch(batch_size=1)
 
 hf_login(os.getenv("HF_TOKEN_EDWIN"))
 
 train_dataset.push_to_hub(
-    "edwindn/emilia-snac-orpheus-1b",
+    "edwindn/emilia-snac-orpheus-1b-unpadded",
     split="train",
     private=True
 )
