@@ -1,6 +1,6 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
 import torch
-from datasets import load_dataset, Dataset
+from datasets import load_dataset, Dataset, concatenate_datasets
 from huggingface_hub import snapshot_download, login as hf_login
 import os
 import dotenv
@@ -82,8 +82,6 @@ def tokenize_map(entry):
         'labels': tokens.copy()
     }
 
-dataset = dataset.select(range(len(dataset)//10))
-
 dataset = dataset.map(tokenize_map, batched=False, remove_columns=dataset.column_names, num_proc=CPU_COUNT)
 
 if not PAD_TO_LENGTH:
@@ -142,29 +140,43 @@ def process_chunk(dataset_chunk, dcix):
     assert all(len(t['input_ids']) == MAX_SEQ_LENGTH for t in train_dataset_chunk[:-1]), f"Not all sequences are of length {MAX_SEQ_LENGTH} in chunk {dcix}"
     return train_dataset_chunk
 
+# Process the dataset in 10 sequential chunks
+chunk_size = len(dataset) // 10
+final_dataset_chunks = []
 
-dataset_chunks = [dataset.shard(num_shards=NUM_CHUNKS, index=i) for i in range(NUM_CHUNKS)]
+dataset_chunks = [dataset.shard(num_shards=10, index=i) for i in range(10)]
 
-# Process chunks in parallel
-print(f"Processing {NUM_CHUNKS} chunks in parallel")
-pool = mp.Pool(processes=NUM_CHUNKS)
-try:
-    process_chunk_with_index = partial(process_chunk)
-    results = pool.starmap(process_chunk_with_index, [(chunk, i) for i, chunk in enumerate(dataset_chunks)])
-finally:
-    pool.close()
-    pool.join()
-print(f"Finished processing {NUM_CHUNKS} chunks")
+for ds in dataset_chunks:
+    ds_chunks = [ds.shard(num_shards=NUM_CHUNKS, index=i) for i in range(NUM_CHUNKS)]
 
-# Combine results
-train_dataset = []
-for result in results:
-    train_dataset.extend(result)
+    # Process chunks in parallel
+    print(f"Processing {NUM_CHUNKS} chunks in parallel")
+    pool = mp.Pool(processes=NUM_CHUNKS)
+    try:
+        process_chunk_with_index = partial(process_chunk)
+        results = pool.starmap(process_chunk_with_index, [(chunk, i) for i, chunk in enumerate(dataset_chunks)])
+    finally:
+        pool.close()
+        pool.join()
+    print(f"Finished processing {NUM_CHUNKS} chunks")
 
-print("Combined chunks")
+    # Combine results
+    train_dataset = []
+    for result in results:
+        train_dataset.extend(result)
 
-train_dataset = Dataset.from_list(train_dataset)
-train_dataset = train_dataset.shuffle(seed=42)
+    print("Combined chunks")
+
+    train_dataset = Dataset.from_list(train_dataset)
+    train_dataset = train_dataset.shuffle(seed=42)
+    final_dataset_chunks.append(train_dataset)
+
+    print(f"Finished dataset portion {len(final_dataset_chunks)}")
+
+# Combine all chunks into final dataset
+train_dataset = concatenate_datasets(final_dataset_chunks)
+print(f"Final dataset size: {len(train_dataset)}")
+
 
 hf_login(os.getenv("HF_TOKEN_EDWIN"))
 
