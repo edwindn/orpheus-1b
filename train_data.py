@@ -94,7 +94,7 @@ if not PAD_TO_LENGTH:
 
     quit()
 
-    
+
 
 # SEQ_LEN chunking
 train_dataset = []
@@ -103,7 +103,7 @@ current_len = 0
 last_chunk = []
 
 for row in tqdm(dataset):
-    tokens = row['tokens']
+    tokens = row['input_ids']
     
     while current_len + len(tokens) > MAX_SEQ_LENGTH:
         needed = MAX_SEQ_LENGTH - current_len
