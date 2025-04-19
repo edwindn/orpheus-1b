@@ -82,5 +82,5 @@ hf_login(os.getenv("HF_TOKEN_EDWIN"))
 train_dataset.push_to_hub(
     "edwindn/emilia-snac-orpheus-1b-unpadded",
     split="train",
-    private=True
+    private=False
 )

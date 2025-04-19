@@ -25,6 +25,7 @@ MAX_SEQ_LENGTH = 8192
 CPU_COUNT = os.cpu_count()
 TRAIN_BATCH_SIZE = 1
 PAD_TO_LENGTH = True
+NUM_CHUNKS = 5
 
 hf_login(os.getenv("HF_TOKEN_AMUVARMA"))
 tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B")
@@ -140,18 +141,16 @@ def process_chunk(dataset_chunk, dcix):
     assert all(len(t['input_ids']) == MAX_SEQ_LENGTH for t in train_dataset_chunk[:-1]), f"Not all sequences are of length {MAX_SEQ_LENGTH} in chunk {dcix}"
     return train_dataset_chunk
 
-num_chunks = 5
-dataset_chunks = [dataset.shard(num_shards=num_chunks, index=i) for i in range(num_chunks)]
 
-with mp.Pool(processes=num_chunks) as pool:
+dataset_chunks = [dataset.shard(num_shards=NUM_CHUNKS, index=i) for i in range(NUM_CHUNKS)]
+
+with mp.Pool(processes=NUM_CHUNKS) as pool:
     process_chunk_with_index = partial(process_chunk)
     results = pool.starmap(process_chunk_with_index, [(chunk, i) for i, chunk in enumerate(dataset_chunks)])
 
 train_dataset = []
 for result in results:
     train_dataset.extend(result)
-    
-
 
 train_dataset = Dataset.from_list(train_dataset)
 train_dataset = train_dataset.shuffle(seed=42)
