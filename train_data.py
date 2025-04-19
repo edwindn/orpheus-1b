@@ -102,13 +102,18 @@ train_dataset = []
 current_len = 0
 last_chunk = []
 
-for row in tqdm(dataset):
-    tokens = row['input_ids']
-    
+
+dataset_chunks = [dataset.shard(num_shards=5, index=i) for i in range(5)]
+
+for dataset_chunk in dataset_chunks:
+    train_dataset_chunk = []
+    for row in tqdm(dataset_chunk):
+        tokens = row['input_ids']
+        
     while current_len + len(tokens) > MAX_SEQ_LENGTH:
         needed = MAX_SEQ_LENGTH - current_len
         last_chunk.extend(tokens[:needed])
-        train_dataset.append(
+        train_dataset_chunk.append(
             {
                 'input_ids': last_chunk,
                 'attention_mask': [1] * len(last_chunk),
@@ -127,7 +132,7 @@ for row in tqdm(dataset):
     current_len += len(tokens)
     
     if current_len == MAX_SEQ_LENGTH:
-        train_dataset.append(
+        train_dataset_chunk.append(
             {
                 'input_ids': last_chunk,
                 'attention_mask': [1] * len(last_chunk),

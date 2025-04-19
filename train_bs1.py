@@ -21,6 +21,8 @@ hf_login(os.getenv("HF_TOKEN_EDWIN"))
 USE_WANDB = True
 
 if USE_WANDB:
+    # Login to wandb
+    wandb.login(key=os.getenv("WANDB_API_KEY"))
     # Initialize wandb
     wandb.init(
         project="orpheus-1b",
