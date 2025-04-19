@@ -144,10 +144,16 @@ def process_chunk(dataset_chunk, dcix):
 
 dataset_chunks = [dataset.shard(num_shards=NUM_CHUNKS, index=i) for i in range(NUM_CHUNKS)]
 
-with mp.Pool(processes=NUM_CHUNKS) as pool:
+# Process chunks in parallel
+pool = mp.Pool(processes=NUM_CHUNKS)
+try:
     process_chunk_with_index = partial(process_chunk)
     results = pool.starmap(process_chunk_with_index, [(chunk, i) for i, chunk in enumerate(dataset_chunks)])
+finally:
+    pool.close()
+    pool.join()
 
+# Combine results
 train_dataset = []
 for result in results:
     train_dataset.extend(result)
