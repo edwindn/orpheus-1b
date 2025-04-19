@@ -25,7 +25,7 @@ MAX_SEQ_LENGTH = 8192
 CPU_COUNT = os.cpu_count()
 TRAIN_BATCH_SIZE = 1
 PAD_TO_LENGTH = True
-NUM_CHUNKS = 5
+NUM_CHUNKS = 50
 
 hf_login(os.getenv("HF_TOKEN_AMUVARMA"))
 tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B")
@@ -82,7 +82,7 @@ def tokenize_map(entry):
         'labels': tokens.copy()
     }
 
-dataset = dataset.select(range(100))
+#dataset = dataset.select(range(100))
 
 dataset = dataset.map(tokenize_map, batched=False, remove_columns=dataset.column_names, num_proc=CPU_COUNT)
 
