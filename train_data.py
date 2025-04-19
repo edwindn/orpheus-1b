@@ -6,6 +6,8 @@ import os
 import dotenv
 from tqdm import tqdm
 import random
+import multiprocessing as mp
+from functools import partial
 
 dotenv.load_dotenv()
 
@@ -95,55 +97,61 @@ if not PAD_TO_LENGTH:
     quit()
 
 
-
-# SEQ_LEN chunking
-train_dataset = []
-
-current_len = 0
-last_chunk = []
-
-
-dataset_chunks = [dataset.shard(num_shards=5, index=i) for i in range(5)]
-
-for dataset_chunk in dataset_chunks:
+def process_chunk(dataset_chunk, dcix):
     train_dataset_chunk = []
-    for row in tqdm(dataset_chunk):
+    current_len = 0
+    last_chunk = []
+
+    for row in tqdm(dataset_chunk, desc=f"Processing chunk {dcix}"):
         tokens = row['input_ids']
-        
-    while current_len + len(tokens) > MAX_SEQ_LENGTH:
-        needed = MAX_SEQ_LENGTH - current_len
-        last_chunk.extend(tokens[:needed])
-        train_dataset_chunk.append(
-            {
-                'input_ids': last_chunk,
-                'attention_mask': [1] * len(last_chunk),
-                'labels': last_chunk.copy()
-            }
-        )
+            
+        while current_len + len(tokens) > MAX_SEQ_LENGTH:
+            needed = MAX_SEQ_LENGTH - current_len
+            last_chunk.extend(tokens[:needed])
+            train_dataset_chunk.append(
+                {
+                    'input_ids': last_chunk,
+                    'attention_mask': [1] * len(last_chunk),
+                    'labels': last_chunk.copy()
+                }
+            )
 
-        if random.random() < 0.0001:
-            print(f"Chunk {len(train_dataset)}: {len(last_chunk)}")
+            if random.random() < 0.0001:
+                print(f"Chunk {len(train_dataset_chunk)}: {len(last_chunk)}")
+            
+            tokens = tokens[needed:]
+            last_chunk = []
+            current_len = 0
         
-        tokens = tokens[needed:]
-        last_chunk = []
-        current_len = 0
-    
-    last_chunk.extend(tokens)
-    current_len += len(tokens)
-    
-    if current_len == MAX_SEQ_LENGTH:
-        train_dataset_chunk.append(
-            {
-                'input_ids': last_chunk,
-                'attention_mask': [1] * len(last_chunk),
-                'labels': last_chunk.copy()
-            }
-        )
-        last_chunk = []
-        current_len = 0
+        last_chunk.extend(tokens)
+        current_len += len(tokens)
+        
+        if current_len == MAX_SEQ_LENGTH:
+            train_dataset_chunk.append(
+                {
+                    'input_ids': last_chunk,
+                    'attention_mask': [1] * len(last_chunk),
+                    'labels': last_chunk.copy()
+                }
+            )
+            last_chunk = []
+            current_len = 0
 
-# Verify all sequences are the correct length
-assert all(len(t['input_ids']) == MAX_SEQ_LENGTH for t in train_dataset), f"Not all sequences are of length {MAX_SEQ_LENGTH}"
+    assert all(len(t['input_ids']) == MAX_SEQ_LENGTH for t in train_dataset_chunk[:-1]), f"Not all sequences are of length {MAX_SEQ_LENGTH} in chunk {dcix}"
+    return train_dataset_chunk
+
+num_chunks = 5
+dataset_chunks = [dataset.shard(num_shards=num_chunks, index=i) for i in range(num_chunks)]
+
+with mp.Pool(processes=num_chunks) as pool:
+    process_chunk_with_index = partial(process_chunk)
+    results = pool.starmap(process_chunk_with_index, [(chunk, i) for i, chunk in enumerate(dataset_chunks)])
+
+train_dataset = []
+for result in results:
+    train_dataset.extend(result)
+    
+
 
 train_dataset = Dataset.from_list(train_dataset)
 train_dataset = train_dataset.shuffle(seed=42)

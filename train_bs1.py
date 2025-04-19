@@ -11,7 +11,7 @@ dotenv.load_dotenv()
 """
 run on gpu
 
-accelerate launch train.py
+accelerate launch train_bs1.py
 
 move the map function to train_data.py
 """
@@ -117,5 +117,5 @@ trainer = Trainer(
 
 trainer.train()
 
-trainer.push_to_hub("edwindn/orpheus-1b-0.1-test")
+trainer.push_to_hub("edwindn/orpheus-1b-0.1")
 

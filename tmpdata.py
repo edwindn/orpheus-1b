@@ -6,6 +6,10 @@ from huggingface_hub import login as hf_login, snapshot_download
 import wandb
 import dotenv
 
+"""
+run on cpu
+"""
+
 dotenv.load_dotenv()
 
 hf_login(os.getenv("HF_TOKEN_EDWIN"))
