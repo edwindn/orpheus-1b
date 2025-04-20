@@ -26,7 +26,7 @@ CPU_COUNT = min(os.cpu_count(), 100)
 TRAIN_BATCH_SIZE = 1
 PAD_TO_LENGTH = True
 NUM_CHUNKS = 200
-NUM_DS_SHARDS = 10
+NUM_DS_SHARDS = 25
 
 hf_login(os.getenv("HF_TOKEN_AMUVARMA"))
 tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B")
@@ -170,7 +170,7 @@ for idx, ds in enumerate(dataset_chunks):
     print("Combined chunks")
 
     train_dataset = Dataset.from_list(train_dataset)
-    train_dataset = train_dataset.shuffle(seed=42)
+    #train_dataset = train_dataset.shuffle(seed=42)
 
     train_dataset.push_to_hub(
         f"edwindn/emilia-snac-orpheus-1b-{idx}",
